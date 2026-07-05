@@ -33,6 +33,7 @@ interface EtaState {
               [class.bg-blue-500]="isRefreshing"
               [class.animate-pulse]="isRefreshing"
               [class.bg-green-500]="!isRefreshing"
+              [class.bg-stone-200]="false"
             ></span>
             <span>{{ isRefreshing ? '更新中...' : '每 30 秒自動更新' }}</span>
           </div>

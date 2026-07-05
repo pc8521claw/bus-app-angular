@@ -61,9 +61,17 @@ import { catchError, switchMap } from 'rxjs/operators';
                   </h1>
                   <button
                     (click)="toggleFavorite()"
-                    class="text-xl"
-                    [class.text-yellow-400]="isFavorite"
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all text-xl"
+                    [class.bg-yellow-300]="isFavorite"
+                    [class.text-yellow-900]="isFavorite"
+                    [class.hover-bg-yellow-400]="isFavorite"
+                    [class.ring-2]="isFavorite"
+                    [class.ring-yellow-400]="isFavorite"
+                    [class.shadow-sm]="isFavorite"
+                    [class.bg-stone-100]="!isFavorite"
                     [class.text-stone-400]="!isFavorite"
+                    [class.hover-bg-stone-200]="!isFavorite"
+                    [class.hover-text-yellow-500]="!isFavorite"
                   >
                     {{ isFavorite ? '★' : '☆' }}
                   </button>
