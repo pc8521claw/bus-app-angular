@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { KmbApiService } from '../../services/kmb-api.service';
@@ -233,14 +234,16 @@ export class RouteComponent implements OnInit, OnDestroy {
     private router: Router,
     private api: KmbApiService,
     private fareData: FareDataService,
-    private storage: StorageService
+    private storage: StorageService,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.sub = this.routeAct.params.subscribe(async params => {
       this.route = params['route'];
       this.direction = params['direction'] as Direction;
-      this.company = (this.routeAct.snapshot.queryParams['company'] as Company) || 'KMB';
+      this.company = ((this.routeAct.snapshot.queryParams['company'] as string) || 'KMB').toUpperCase() as Company;
 
       // Validate direction
       if (this.direction !== 'inbound' && this.direction !== 'outbound') {
@@ -270,7 +273,7 @@ export class RouteComponent implements OnInit, OnDestroy {
   loadRoute(): void {
     this.loading = true;
     this.notFound = false;
-    console.log('[DEBUG loadRoute] route=', this.route, 'direction=', this.direction, 'company=', this.company);
+
 
     if (this.company === 'KMB') {
       this.api.fetchKmbRouteInfo(this.route, this.direction).pipe(
@@ -300,24 +303,34 @@ export class RouteComponent implements OnInit, OnDestroy {
         })
       ).subscribe({
         next: (stopInfos) => {
-          console.log('[DEBUG loadRoute] next: stopInfos=', stopInfos, 'stops=', this.stops.length);
-          if (stopInfos && this.stops.length > 0) {
-            stopInfos.forEach((info: any, i: number) => {
-              if (info) {
-                this.stops[i].name_tc = info.name_tc || info.name?.zh || '';
-                this.stops[i].name_en = info.name_en || info.name?.en || '';
-                this.stops[i].lat = info.lat || '';
-                this.stops[i].long = info.long || '';
-              }
+
+          // Run outside Angular zone to avoid triggering change detection on every forEach iteration
+          this.zone.runOutsideAngular(() => {
+            if (stopInfos && this.stops.length > 0) {
+              stopInfos.forEach((info: any, i: number) => {
+                if (info) {
+                  this.stops[i].name_tc = info.name_tc || info.name?.zh || '';
+                  this.stops[i].name_en = info.name_en || info.name?.en || '';
+                  this.stops[i].lat = info.lat || '';
+                  this.stops[i].long = info.long || '';
+                }
+              });
+            }
+            // Re-enter zone to trigger change detection
+            this.zone.run(() => {
+              this.loadFareData();
+              this.loading = false;
+              this.cdr.detectChanges();
+
             });
-          }
-          this.loadFareData();
-          this.loading = false;
-          console.log('[DEBUG loadRoute] done, loading=false');
+          });
         },
         error: (err) => {
-          console.error('[DEBUG loadRoute] error:', err);
-          this.loading = false;
+
+          this.zone.run(() => {
+            this.loading = false;
+            this.cdr.detectChanges();
+          });
         }
       });
     } else {
@@ -327,6 +340,7 @@ export class RouteComponent implements OnInit, OnDestroy {
           if (!ctbInfo) {
             this.notFound = true;
             this.loading = false;
+            this.cdr.detectChanges();
             return of(null);
           }
           const isInbound = this.direction === 'inbound';
@@ -345,10 +359,10 @@ export class RouteComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: (stops) => {
           this.stops = stops || [];
-          // Fetch CTB stop names
           if (this.stops.length === 0) {
             this.loadFareData();
             this.loading = false;
+            this.cdr.detectChanges();
             return;
           }
           const stopNameRequests = this.stops.map(stop =>
@@ -366,13 +380,20 @@ export class RouteComponent implements OnInit, OnDestroy {
                   this.stops[i].long = info.long || '';
                 }
               });
+              this.loadFareData();
+              this.loading = false;
+              this.cdr.detectChanges();
             });
+          } else {
+            this.loadFareData();
+            this.loading = false;
+            this.cdr.detectChanges();
           }
-          this.loadFareData();
-          this.loading = false;
         },
-        error: () => {
+        error: (err) => {
+
           this.loading = false;
+          this.cdr.detectChanges();
         }
       });
     }

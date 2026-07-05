@@ -5,7 +5,8 @@
     "changeOrigin": true,
     "pathRewrite": {
       "^/api/kmb": "/v1/transport/kmb"
-    }
+    },
+    "logLevel": "warn"
   },
   "/api/ctb": {
     "target": "https://rt.data.gov.hk",
@@ -13,6 +14,7 @@
     "changeOrigin": true,
     "pathRewrite": {
       "^/api/ctb": "/v2/transport/citybus"
-    }
+    },
+    "logLevel": "warn"
   }
 }
