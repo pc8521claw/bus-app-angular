@@ -1,0 +1,18 @@
+{
+  "/api/kmb": {
+    "target": "https://data.etabus.gov.hk",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/kmb": "/v1/transport/kmb"
+    }
+  },
+  "/api/ctb": {
+    "target": "https://rt.data.gov.hk",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/ctb": "/v2/transport/citybus"
+    }
+  }
+}

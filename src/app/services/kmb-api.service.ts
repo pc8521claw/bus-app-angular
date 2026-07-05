@@ -5,8 +5,8 @@ import { NormalizedRouteInfo, NormalizedStop, Direction } from '../models/types'
 
 @Injectable({ providedIn: 'root' })
 export class KmbApiService {
-  private readonly KMB_BASE = 'https://data.etabus.gov.hk/v1/transport/kmb';
-  private readonly CTB_BASE = 'https://rt.data.gov.hk/v2/transport/citybus';
+  private readonly KMB_BASE = '/api/kmb';
+  private readonly CTB_BASE = '/api/ctb';
 
   constructor(private http: HttpClient) {}
 
