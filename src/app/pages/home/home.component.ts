@@ -156,8 +156,7 @@ import { FavoriteItem, RecentSearch, RouteSearchResult, Direction } from '../../
                 >
                   <span
                     class="inline-block w-1.5 h-1.5 rounded-full"
-                    [class.bg-amber-500]="f.company === 'KMB'"
-                    [class.bg-blue-500]="f.company === 'CTB'"
+                    [style.background-color]="f.company === 'KMB' ? '#f59e0b' : f.company === 'CTB' ? '#3b82f6' : '#a8a29e'"
                   ></span>
                   <span>{{ f.route }}</span>
                 </a>
@@ -186,8 +185,7 @@ import { FavoriteItem, RecentSearch, RouteSearchResult, Direction } from '../../
                 >
                   <span
                     class="inline-block w-1.5 h-1.5 rounded-full"
-                    [class.bg-amber-500]="entry.company === 'KMB'"
-                    [class.bg-blue-500]="entry.company === 'CTB'"
+                    [style.background-color]="entry.company === 'KMB' ? '#f59e0b' : entry.company === 'CTB' ? '#3b82f6' : '#a8a29e'"
                   ></span>
                   <span>{{ entry.route }}</span>
                   <span class="text-xs text-stone-900 opacity-60">
