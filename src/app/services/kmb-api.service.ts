@@ -12,8 +12,7 @@ export class KmbApiService {
 
   // KMB Route Info
   fetchKmbRouteInfo(route: string, direction: Direction): Observable<NormalizedRouteInfo | null> {
-    const bound = direction === 'outbound' ? 'O' : 'I';
-    const url = `${this.KMB_BASE}/route/${route}/${bound}/1`;
+    const url = `${this.KMB_BASE}/route/${route}/${direction}/1`;
     return this.http.get<any>(url).pipe(
       map(json => {
         if (!json.data || Object.keys(json.data).length === 0) return null;
@@ -33,8 +32,7 @@ export class KmbApiService {
 
   // KMB Route Stops
   fetchKmbRouteStops(route: string, direction: Direction): Observable<any[]> {
-    const bound = direction === 'outbound' ? 'O' : 'I';
-    const url = `${this.KMB_BASE}/route-stop/${route}/${bound}/1`;
+    const url = `${this.KMB_BASE}/route-stop/${route}/${direction}/1`;
     return this.http.get<any>(url).pipe(map(json => json.data || []));
   }
 
