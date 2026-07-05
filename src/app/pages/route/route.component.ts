@@ -270,6 +270,7 @@ export class RouteComponent implements OnInit, OnDestroy {
   loadRoute(): void {
     this.loading = true;
     this.notFound = false;
+    console.log('[DEBUG loadRoute] route=', this.route, 'direction=', this.direction, 'company=', this.company);
 
     if (this.company === 'KMB') {
       this.api.fetchKmbRouteInfo(this.route, this.direction).pipe(
@@ -299,6 +300,7 @@ export class RouteComponent implements OnInit, OnDestroy {
         })
       ).subscribe({
         next: (stopInfos) => {
+          console.log('[DEBUG loadRoute] next: stopInfos=', stopInfos, 'stops=', this.stops.length);
           if (stopInfos && this.stops.length > 0) {
             stopInfos.forEach((info: any, i: number) => {
               if (info) {
@@ -311,8 +313,10 @@ export class RouteComponent implements OnInit, OnDestroy {
           }
           this.loadFareData();
           this.loading = false;
+          console.log('[DEBUG loadRoute] done, loading=false');
         },
-        error: () => {
+        error: (err) => {
+          console.error('[DEBUG loadRoute] error:', err);
           this.loading = false;
         }
       });
