@@ -266,16 +266,19 @@ export class HomeComponent implements OnInit {
 
         if (results.length === 1) {
           const r = results[0];
-          this.router.navigate(['/route', encodeURIComponent(trimmed), this.direction], {
-            queryParams: { company: r.company }
-          });
-          return;
+          const url = `/route/${encodeURIComponent(trimmed)}/${this.direction}?company=${r.company}`;
+          window.location.href = window.location.origin + url;
+        } else if (results.length > 1) {
+          // Prefer KMB over CTB when both exist
+          const r = results.find(x => x.company === 'KMB') || results[0];
+          const url = `/route/${encodeURIComponent(trimmed)}/${this.direction}?company=${r.company}`;
+          window.location.href = window.location.origin + url;
         }
-
         this.searchResults = results;
         this.checking = false;
       },
-      error: () => {
+      error: (err) => {
+        // Network error
         this.error = '網絡錯誤，請稍後再試';
         this.checking = false;
       }
@@ -284,22 +287,19 @@ export class HomeComponent implements OnInit {
 
   navigateToRoute(event: Event, r: RouteSearchResult): void {
     event.preventDefault();
-    this.router.navigate(['/route', encodeURIComponent(r.route), this.direction], {
-      queryParams: { company: r.company }
-    });
+    const url = `/route/${encodeURIComponent(r.route)}/${this.direction}?company=${r.company}`;
+    window.location.href = window.location.origin + url;
   }
 
   navigateToRouteFav(event: Event, f: FavoriteItem): void {
     event.preventDefault();
-    this.router.navigate(['/route', encodeURIComponent(f.route), 'outbound'], {
-      queryParams: { company: f.company }
-    });
+    const url = `/route/${encodeURIComponent(f.route)}/outbound?company=${f.company}`;
+    window.location.href = window.location.origin + url;
   }
 
   navigateToRouteRecent(event: Event, entry: RecentSearch): void {
     event.preventDefault();
-    this.router.navigate(['/route', encodeURIComponent(entry.route), entry.direction], {
-      queryParams: { company: entry.company }
-    });
+    const url = `/route/${encodeURIComponent(entry.route)}/${entry.direction}?company=${entry.company}`;
+    window.location.href = window.location.origin + url;
   }
 }
