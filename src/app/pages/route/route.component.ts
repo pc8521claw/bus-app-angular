@@ -252,6 +252,12 @@ export class RouteComponent implements OnInit, OnDestroy {
       this.route = params['route'];
       this.direction = params['direction'] as Direction;
       this.company = ((this.routeAct.snapshot.queryParams['company'] as string) || 'KMB').toUpperCase() as Company;
+      
+      // Reset fare data
+      this.fareLoaded = false;
+      this.fullFare = null;
+      this.schedule = [];
+      this.serviceHours = null;
 
       // Validate direction
       if (this.direction !== 'inbound' && this.direction !== 'outbound') {
@@ -268,6 +274,9 @@ export class RouteComponent implements OnInit, OnDestroy {
 
       // Fetch route info and stops
       this.loadRoute();
+      
+      // Fallback: load fare data after 3s in case API calls failed silently
+      setTimeout(() => this.loadFareData(), 3000);
     });
   }
 
@@ -404,7 +413,12 @@ export class RouteComponent implements OnInit, OnDestroy {
     }
   }
 
+  private fareLoaded = false;
+
   async loadFareData(): Promise<void> {
+    if (this.fareLoaded) return;
+    this.fareLoaded = true;
+    
     const fareCompany = this.company.toLowerCase() as 'kmb' | 'ctb';
     this.fullFare = await this.fareData.getFullFare(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
     this.schedule = await this.fareData.getSchedule(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
