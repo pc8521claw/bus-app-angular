@@ -330,8 +330,8 @@ export class RouteComponent implements OnInit, OnDestroy {
               });
             }
             // Re-enter zone to trigger change detection
-            this.zone.run(() => {
-              this.loadFareData();
+            this.zone.run(async () => {
+              await this.loadFareData();
               this.loading = false;
               this.cdr.detectChanges();
 
@@ -370,10 +370,10 @@ export class RouteComponent implements OnInit, OnDestroy {
           return this.api.fetchCtbStopsWithNames(this.route, this.direction);
         })
       ).subscribe({
-        next: (stops) => {
+        next: async (stops) => {
           this.stops = stops || [];
           if (this.stops.length === 0) {
-            this.loadFareData();
+            await this.loadFareData();
             this.loading = false;
             this.cdr.detectChanges();
             return;
@@ -384,7 +384,7 @@ export class RouteComponent implements OnInit, OnDestroy {
             )
           );
           if (stopNameRequests.length > 0) {
-            forkJoin(stopNameRequests).subscribe((stopInfos: any[]) => {
+            forkJoin(stopNameRequests).subscribe(async (stopInfos: any[]) => {
               stopInfos.forEach((info, i) => {
                 if (info) {
                   this.stops[i].name_tc = info.name_tc || '';
@@ -393,12 +393,12 @@ export class RouteComponent implements OnInit, OnDestroy {
                   this.stops[i].long = info.long || '';
                 }
               });
-              this.loadFareData();
+              await this.loadFareData();
               this.loading = false;
               this.cdr.detectChanges();
             });
           } else {
-            this.loadFareData();
+            await this.loadFareData();
             this.loading = false;
             this.cdr.detectChanges();
           }
@@ -412,11 +412,36 @@ export class RouteComponent implements OnInit, OnDestroy {
     }
   }
 
+  private fareRetryCount = 0;
+  private maxFareRetries = 3;
+
   async loadFareData(): Promise<void> {
+    if (!this.routeInfo) return;
+    
     const fareCompany = this.company.toLowerCase() as 'kmb' | 'ctb';
-    this.fullFare = await this.fareData.getFullFare(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
-    this.schedule = await this.fareData.getSchedule(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
-    this.serviceHours = await this.fareData.getServiceHours(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
+    const route = this.route;
+    const direction = this.direction;
+    const serviceType = this.routeInfo?.service_type || '1';
+    
+    try {
+      const [fullFare, schedule, serviceHours] = await Promise.all([
+        this.fareData.getFullFare(fareCompany, route, direction, serviceType),
+        this.fareData.getSchedule(fareCompany, route, direction, serviceType),
+        this.fareData.getServiceHours(fareCompany, route, direction, serviceType)
+      ]);
+      
+      this.fullFare = fullFare;
+      this.schedule = schedule;
+      this.serviceHours = serviceHours;
+      this.fareRetryCount = 0;
+      this.cdr.detectChanges();
+    } catch (err) {
+      console.error('Fare load error:', err);
+      this.fareRetryCount++;
+      if (this.fareRetryCount < this.maxFareRetries) {
+        setTimeout(() => this.loadFareData(), 1000 * this.fareRetryCount);
+      }
+    }
   }
 
   updateDirectionText(): void {
