@@ -2,6 +2,45 @@
 
 九龍巴士（KMB）及城巴（Citybus）路線查詢系統，使用 Angular 21 開發。
 
+## 🏗️ 系統架構
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Vercel (Frontend)                        │
+│                  https://bus-app-angular.vercel.app              │
+│                                                                   │
+│   Angular 21 SPA ───────┬─────── KMB/CTB API (政府開放數據)      │
+│                         │                                        │
+│                         └─────── Railway (Backend Proxy)          │
+│                                    https://kmb-backend.up.railway │
+└─────────────────────────────────────────────────────────────────┘
+
+                        Railway (Backend)
+                  ┌──────────────────────┐
+                  │   Express.js API      │
+                  │   + SQLite Database   │
+                  │   + Admin Panel       │
+                  └──────────────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+   ┌──────────┐    ┌────────────┐    ┌──────────────┐
+   │ Fares DB │    │ Route DB   │    │  KMB/CTB    │
+   │ 44,467   │    │  2,760    │    │  API Proxy  │
+   └──────────┘    └────────────┘    └──────────────┘
+```
+
+### 數據流向
+
+| 功能 | 數據來源 |
+|------|----------|
+| 實時到站 (ETA) | KMB/CTB API → Railway Proxy → Angular |
+| 路線搜尋 | KMB/CTB API → Railway Proxy → Angular |
+| 車費資料 | Railway Backend (SQLite) |
+| 服務時間 | Railway Backend (SQLite) |
+
+---
+
 ## 功能概覽
 
 ### 路線搜尋
@@ -37,6 +76,17 @@
 
 ---
 
+## API 數據來源
+
+| 公司 | API 端點 | 用途 |
+|------|----------|------|
+| KMB 九龍巴士 | `data.etabus.gov.hk` | 路線、站點、ETA (經 Railway Proxy) |
+| CTB 城巴 | `rt.data.gov.hk` | 路線、站點、ETA (經 Railway Proxy) |
+| 車費資料 | Railway Backend | SQLite Database |
+| 服務時間 | Railway Backend | SQLite Database |
+
+---
+
 ## 目錄架構
 
 ```
@@ -45,28 +95,25 @@ bus-app-angular/
 │   ├── app/
 │   │   ├── components/
 │   │   │   └── stop-list/              # 巴士站列表 + ETA 組件
-│   │   │       └── stop-list.component.ts
 │   │   ├── models/
 │   │   │   └── types.ts                # TypeScript 介面定義
 │   │   ├── pages/
 │   │   │   ├── home/                   # 首頁：搜尋表單 + 結果 + 收藏 + 最近
-│   │   │   │   └── home.component.ts
-│   │   │   └── route/                  #路線結果頁
-│   │   │       └── route.component.ts
+│   │   │   └── route/                  # 路線結果頁
 │   │   ├── services/
 │   │   │   ├── kmb-api.service.ts      # KMB / CTB API 服務
 │   │   │   ├── fare-data.service.ts    # 車費數據服務
 │   │   │   └── storage.service.ts      # localStorage 存取服務
 │   │   ├── app.ts                      # 根組件
 │   │   ├── app.config.ts               # 應用配置
-│   │   │   └── app.routes.ts           # 路由配置
+│   │   └── app.routes.ts               # 路由配置
 │   ├── assets/
 │   │   └── data/
-│   │       └── routeFareList.min.json  # 車費資料
+│   │       └── routeFareList.min.json  # 車費資料 (本地備份)
 │   ├── styles.css                      # 全域樣式 + Tailwind CSS v4
 │   └── index.html
 ├── angular.json
-├── proxy.conf.json                     # API 代理配置（解決 CORS）
+├── proxy.conf.json                     # API 代理配置（開發用）
 └── package.json
 ```
 
@@ -77,23 +124,13 @@ bus-app-angular/
 | 特色 | 說明 |
 |------|------|
 | Angular 21 Standalone | 最新 Standalone Components 架構，無需 NgModule |
-| Proxy 解決 CORS | 開發階段透過 Angular Proxy 代理 API 請求 |
+| Railway Backend Proxy | 解決 Vercel CORS 限制，統一 API 入口 |
 | RxJS Observables | 使用 forkJoin 並行請求 KMB + CTB 數據 |
-| Change Detection | 使用 ChangeDetectorRef 確保 UI 及時更新 |
+| Change Detection | 使用 ChangeDetectorRef + NgZone 確保 UI 及時更新 |
 | Tailwind CSS v4 | 與 React 版本一致的顏色系統 |
-| 響應式設計 | 支援手機、平板、電腦各種屏幕尺寸 |
+| 響應式設計 | 支援手機，平板、電腦各種屏幕尺寸 |
 | localStorage | 本地持久化收藏及搜索記錄 |
 | TypeScript 強類型 | 完整的介面定義及類型安全 |
-
----
-
-## API 數據來源
-
-| 公司 | API 端點 | 用途 |
-|------|----------|------|
-| KMB 九龍巴士 | `data.etabus.gov.hk` |路線、站點、ETA |
-| CTB 城巴 | `rt.data.gov.hk` | 路線、站點、ETA |
-| 車費資料 | `src/assets/data/routeFareList.min.json` | 本地 JSON |
 
 ---
 
@@ -120,12 +157,23 @@ ng build
 
 ---
 
+## 部署
+
+| 環境 | 平台 | URL |
+|------|------|-----|
+| Frontend | Vercel | <https://bus-app-angular.vercel.app> |
+| Backend | Railway | <https://kmb-backend-production.up.railway.app> |
+| Admin Panel | Railway | <https://kmb-backend-production.up.railway.app/admin> |
+
+---
+
 ## 相關專案
 
 | 版本 | 框架 | 用途 |
 |------|------|------|
-| [bus-app-angular](https://github.com/pc8521claw/bus-app-angular) | Angular 21 | ERB 功課提交 |
+| [bus-app-angular](https://github.com/pc8521claw/bus-app-angular) | Angular 21 | 現有版本 |
 | [kmb-bus-app](https://github.com/pc8521claw/kmb-bus-app) | Next.js (React) | 生產展示版本 |
+| [kmb-backend](https://github.com/pc8521claw/kmb-backend) | Express + SQLite | 後端 API + Admin Panel |
 
 ---
 
