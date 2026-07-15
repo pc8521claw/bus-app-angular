@@ -5,8 +5,8 @@ import { NormalizedRouteInfo, NormalizedStop, Direction } from '../models/types'
 
 @Injectable({ providedIn: 'root' })
 export class KmbApiService {
-  private readonly KMB_BASE = '/api/kmb';
-  private readonly CTB_BASE = '/api/ctb';
+  private readonly KMB_BASE = 'https://kmb-backend-production.up.railway.app/api/kmb';
+  private readonly CTB_BASE = 'https://kmb-backend-production.up.railway.app/api/ctb';
 
   constructor(private http: HttpClient) {}
 
