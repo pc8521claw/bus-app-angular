@@ -260,9 +260,6 @@ export class RouteComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Load fare data
-      await this.fareData.loadData();
-
       // Check favorite status
       this.isFavorite = this.storage.isFavorite(this.company, this.route);
 
@@ -407,11 +404,11 @@ export class RouteComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadFareData(): void {
+  async loadFareData(): Promise<void> {
     const fareCompany = this.company.toLowerCase() as 'kmb' | 'ctb';
-    this.fullFare = this.fareData.getFullFare(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
-    this.schedule = this.fareData.getSchedule(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
-    this.serviceHours = this.fareData.getServiceHours(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
+    this.fullFare = await this.fareData.getFullFare(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
+    this.schedule = await this.fareData.getSchedule(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
+    this.serviceHours = await this.fareData.getServiceHours(fareCompany, this.route, this.direction, this.routeInfo?.service_type || '1');
   }
 
   updateDirectionText(): void {
