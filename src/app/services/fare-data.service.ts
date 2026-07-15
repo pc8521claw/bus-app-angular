@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { ScheduleSlot, ServiceHours, Direction } from '../models/types';
 
 const API_BASE = 'https://kmb-backend-production.up.railway.app/api';
@@ -10,7 +11,7 @@ export class FareDataService {
 
   async getFullFare(company: 'kmb' | 'ctb', route: string, direction: Direction, serviceType: string): Promise<string | null> {
     try {
-      const fares: any[] = await this.http.get<any[]>(`${API_BASE}/fares/${route}`, { params: { company } }).toPromise() || [];
+      const fares: any[] = await firstValueFrom(this.http.get<any[]>(`${API_BASE}/fares/${route}`, { params: { company } })) || [];
       if (fares.length === 0) return null;
       const maxFare = Math.max(...fares.map(f => f.fare).filter(f => f && !isNaN(f)));
       return maxFare > 0 ? maxFare.toFixed(2) : null;
@@ -21,16 +22,14 @@ export class FareDataService {
 
   async getServiceHours(company: 'kmb' | 'ctb', route: string, direction: Direction, serviceType: string): Promise<ServiceHours | null> {
     try {
-      const freqs: any[] = await this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } }).toPromise() || [];
+      const freqs: any[] = await firstValueFrom(this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } })) || [];
       if (freqs.length === 0) return null;
       
-      // Filter by direction (O=outbound, I=inbound)
       const bound = direction === 'outbound' ? 'O' : 'I';
       const filtered = freqs.filter(f => f.bound === bound);
       
       if (filtered.length === 0) return null;
       
-      // Extract times
       const times = filtered.map(f => f.start_time).filter(Boolean).sort();
       const endTimes = filtered.map(f => f.end_time).filter(Boolean).sort();
       
@@ -45,7 +44,7 @@ export class FareDataService {
 
   async getSchedule(company: 'kmb' | 'ctb', route: string, direction: Direction, serviceType: string): Promise<ScheduleSlot[]> {
     try {
-      const freqs: any[] = await this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } }).toPromise() || [];
+      const freqs: any[] = await firstValueFrom(this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } })) || [];
       if (freqs.length === 0) return [];
       
       const bound = direction === 'outbound' ? 'O' : 'I';
@@ -60,7 +59,6 @@ export class FareDataService {
         }))
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
       
-      // Deduplicate by startTime
       const seen = new Set<string>();
       return slots.filter(slot => {
         if (seen.has(slot.startTime)) return false;
