@@ -201,6 +201,9 @@ import { FavoriteItem, RecentSearch, RouteSearchResult, Direction } from '../../
         <div class="mt-12 text-center text-xs text-stone-900 opacity-50 space-y-0.5">
           <div>即時班次：九巴開放數據 / 城巴開放數據</div>
           <div>車費及服務時間：hk-bus-crawling</div>
+          <div class="mt-2">
+            <a href="https://kmb-backend-production.up.railway.app/admin" target="_blank" class="underline hover:text-blue-600">🔧 Backend Admin</a>
+          </div>
         </div>
       </div>
     </main>
