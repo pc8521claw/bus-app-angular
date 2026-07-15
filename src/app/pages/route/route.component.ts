@@ -42,11 +42,8 @@ import { catchError, switchMap } from 'rxjs/operators';
             </a>
           </div>
         } @else if (routeInfo) {
-          <!-- Debug button (hidden) -->
-          <div class="hidden">
-            <button (click)="loadFareData()" class="text-xs">🔧 Debug</button>
-            <span class="text-xs">| fullFare={{ fullFare }} | serviceHours={{ serviceHours | json }}</span>
-          </div>
+          <!-- Debug (hidden) -->
+          <!-- <button (click)="loadFareData()" class="hidden"></button> -->
           <!-- Route Header -->
           <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 sm:p-6 mb-4">
             <div class="flex items-start justify-between gap-3 mb-3">
