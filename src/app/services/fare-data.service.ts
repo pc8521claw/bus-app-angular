@@ -25,13 +25,9 @@ export class FareDataService {
       const freqs: any[] = await firstValueFrom(this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } })) || [];
       if (freqs.length === 0) return null;
       
-      const bound = direction === 'outbound' ? 'O' : 'I';
-      const filtered = freqs.filter(f => f.bound === bound);
-      
-      if (filtered.length === 0) return null;
-      
-      const times = filtered.map(f => f.start_time).filter(Boolean).sort();
-      const endTimes = filtered.map(f => f.end_time).filter(Boolean).sort();
+      // No direction filter - get all times and find earliest/latest
+      const times = freqs.map(f => f.start_time).filter(Boolean).sort();
+      const endTimes = freqs.map(f => f.end_time).filter(Boolean).sort();
       
       return {
         firstBus: times[0] || '00:00',
@@ -47,10 +43,8 @@ export class FareDataService {
       const freqs: any[] = await firstValueFrom(this.http.get<any[]>(`${API_BASE}/service-hours/${route}`, { params: { company } })) || [];
       if (freqs.length === 0) return [];
       
-      const bound = direction === 'outbound' ? 'O' : 'I';
-      const filtered = freqs.filter(f => f.bound === bound);
-      
-      const slots: ScheduleSlot[] = filtered
+      // No direction filter for schedule
+      const slots: ScheduleSlot[] = freqs
         .filter(f => f.start_time && f.end_time && f.headway)
         .map(f => ({
           startTime: f.start_time,
