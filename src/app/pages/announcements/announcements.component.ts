@@ -132,6 +132,7 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('AnnouncementsComponent ngOnInit called');
     this.loadAnnouncements();
   }
 
