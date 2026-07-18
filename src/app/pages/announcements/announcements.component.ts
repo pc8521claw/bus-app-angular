@@ -37,7 +37,8 @@ interface Announcement {
         <!-- Error -->
         @if (error && !loading) {
           <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-            <p class="text-red-600 text-sm">{{ error }}</p>
+            <p class="text-red-600 text-sm font-medium">{{ error }}</p>
+            <p class="text-stone-600 text-xs mt-1">API: {{ api.getBackendUrl() }}/announcements</p>
             <button 
               (click)="loadAnnouncements()"
               class="mt-3 px-4 py-2 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition-colors"
@@ -73,7 +74,7 @@ interface Announcement {
                       高
                     </span>
                   } @else if (a.priority === 5) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-amber-400 text-amber-900 rounded">
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-yellow-400 text-yellow-900 rounded">
                       中
                     </span>
                   } @else {
