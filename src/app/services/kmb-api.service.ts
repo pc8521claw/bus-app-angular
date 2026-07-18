@@ -5,10 +5,15 @@ import { NormalizedRouteInfo, NormalizedStop, Direction } from '../models/types'
 
 @Injectable({ providedIn: 'root' })
 export class KmbApiService {
+  private readonly BACKEND_BASE = 'https://kmb-backend-production.up.railway.app/api';
   private readonly KMB_BASE = 'https://kmb-backend-production.up.railway.app/api/kmb';
   private readonly CTB_BASE = 'https://kmb-backend-production.up.railway.app/api/ctb';
 
   constructor(private http: HttpClient) {}
+
+  getBackendUrl(): string {
+    return this.BACKEND_BASE;
+  }
 
   // KMB Route Info
   fetchKmbRouteInfo(route: string, direction: Direction): Observable<NormalizedRouteInfo | null> {
