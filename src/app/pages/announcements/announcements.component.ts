@@ -88,10 +88,6 @@ interface Announcement {
           </div>
         }
 
-        <!-- Footer -->
-        <div class="mt-8 text-center text-xs text-stone-900 opacity-50">
-          <div>最後更新：{{ lastUpdated }}</div>
-        </div>
       </div>
     </main>
   `,
@@ -112,7 +108,6 @@ export class AnnouncementsComponent implements OnInit {
   announcements: Announcement[] = [];
   loading = true;
   error = '';
-  lastUpdated = '';
 
   constructor(
     private http: HttpClient,
@@ -131,7 +126,6 @@ export class AnnouncementsComponent implements OnInit {
     this.http.get<Announcement[]>(`${apiUrl}/announcements`).subscribe({
       next: (data) => {
         this.announcements = data;
-        this.lastUpdated = new Date().toLocaleString('zh-HK');
         this.loading = false;
       },
       error: (err) => {
@@ -143,7 +137,9 @@ export class AnnouncementsComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
+    // Backend stores Unix timestamp in seconds, convert to milliseconds
+    const timestamp = typeof dateStr === 'number' ? dateStr * 1000 : parseInt(dateStr) * 1000;
+    const date = new Date(timestamp);
     return date.toLocaleDateString('zh-HK', {
       year: 'numeric',
       month: 'long',
