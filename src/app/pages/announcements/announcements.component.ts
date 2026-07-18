@@ -75,15 +75,15 @@ interface Announcement {
                   
                   <!-- Priority Badge -->
                   @if (a.priority === 10) {
-                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-red-500 text-white rounded-lg">
+                    <span style="background-color: #ef4444; color: white;" class="shrink-0 px-3 py-1 text-sm font-bold rounded-lg">
                       高
                     </span>
                   } @else if (a.priority === 5) {
-                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-yellow-400 text-yellow-900 rounded-lg">
+                    <span style="background-color: #facc15; color: #713f12;" class="shrink-0 px-3 py-1 text-sm font-bold rounded-lg">
                       中
                     </span>
                   } @else {
-                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-green-500 text-white rounded-lg">
+                    <span style="background-color: #22c55e; color: white;" class="shrink-0 px-3 py-1 text-sm font-bold rounded-lg">
                       一般
                     </span>
                   }
