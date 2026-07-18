@@ -1,9 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Subscription, timer } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 interface Announcement {
   id: number;
@@ -117,27 +113,17 @@ interface Announcement {
     }
   `]
 })
-export class AnnouncementsComponent implements OnInit, OnDestroy {
+export class AnnouncementsComponent implements OnInit {
   announcements: Announcement[] = [];
   loading = true;
   showError = false;
   errorMessage = '';
-  apiUrl = '';
-  private reloadSubscription?: Subscription;
+  apiUrl = 'https://kmb-backend-production.up.railway.app/api';
 
-  constructor(
-    private http: HttpClient
-  ) {
-    this.apiUrl = 'https://kmb-backend-production.up.railway.app/api';
-  }
+  constructor() {}
 
   ngOnInit(): void {
-    console.log('AnnouncementsComponent ngOnInit called');
     this.loadAnnouncements();
-  }
-
-  ngOnDestroy(): void {
-    this.reloadSubscription?.unsubscribe();
   }
 
   loadAnnouncements(): void {
@@ -146,26 +132,24 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     const url = `${this.apiUrl}/announcements`;
-    console.log('Fetching:', url);
-
-    this.http.get<Announcement[]>(url).subscribe({
-      next: (data) => {
-        console.log('Success, count:', data?.length || 0);
+    
+    // Use fetch API instead of HttpClient for reliability
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data: Announcement[]) => {
         this.announcements = data || [];
         this.loading = false;
-        this.showError = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Error:', err);
+      })
+      .catch(err => {
         this.loading = false;
         this.showError = true;
-        this.errorMessage = err.status === 0 
-          ? '網絡連線失敗' 
-          : err.status === 404 
-            ? 'API 找不到 (404)'
-            : `伺服器錯誤 (${err.status})`;
-      }
-    });
+        this.errorMessage = '無法載入公告: ' + err.message;
+      });
   }
 
   formatDate(dateStr: string): string {
