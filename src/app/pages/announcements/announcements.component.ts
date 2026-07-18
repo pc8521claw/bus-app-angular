@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { KmbApiService } from '../../services/kmb-api.service';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Subscription, timer } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 interface Announcement {
   id: number;
@@ -27,21 +29,22 @@ interface Announcement {
         </div>
 
         <!-- Loading -->
-        @if (loading) {
+        @if (loading && announcements.length === 0) {
           <div class="flex flex-col items-center justify-center py-12">
             <div class="w-8 h-8 border-3 border-stone-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p class="mt-3 text-sm text-stone-900 opacity-60">載入中...</p>
+            <p class="mt-3 text-sm text-stone-600">載入中...</p>
           </div>
         }
 
         <!-- Error -->
-        @if (error && !loading) {
-          <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-            <p class="text-red-600 text-sm font-medium">{{ error }}</p>
-            <p class="text-stone-600 text-xs mt-1">API: {{ api.getBackendUrl() }}/announcements</p>
+        @if (showError && !loading) {
+          <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center">
+            <div class="text-3xl mb-3">⚠️</div>
+            <p class="text-red-700 font-medium">{{ errorMessage }}</p>
+            <p class="text-stone-600 text-xs mt-2 mb-4">API: {{ apiUrl }}/announcements</p>
             <button 
               (click)="loadAnnouncements()"
-              class="mt-3 px-4 py-2 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition-colors"
+              class="px-6 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors"
             >
               重試
             </button>
@@ -49,15 +52,15 @@ interface Announcement {
         }
 
         <!-- Empty State -->
-        @if (!loading && !error && announcements.length === 0) {
+        @if (!loading && !showError && announcements.length === 0) {
           <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-8 text-center">
             <div class="text-4xl mb-3">📭</div>
-            <p class="text-stone-900 text-sm">暫時沒有公告</p>
+            <p class="text-stone-600">暫時沒有公告</p>
           </div>
         }
 
         <!-- Announcements List -->
-        @if (!loading && !error && announcements.length > 0) {
+        @if (announcements.length > 0) {
           <div class="space-y-4">
             @for (a of announcements; track a.id) {
               <div 
@@ -65,35 +68,38 @@ interface Announcement {
                 [class.border-l-4]="a.priority === 10"
                 [class.border-l-red-500]="a.priority === 10"
               >
-                <div class="flex items-start justify-between gap-3 mb-2">
-                  <h3 class="font-bold text-stone-900 text-base leading-tight">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                  <h3 class="font-bold text-stone-900 text-base leading-tight flex-1">
                     {{ a.title }}
                   </h3>
+                  
+                  <!-- Priority Badge -->
                   @if (a.priority === 10) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded">
+                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-red-500 text-white rounded-lg">
                       高
                     </span>
                   } @else if (a.priority === 5) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-yellow-400 text-yellow-900 rounded">
+                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-yellow-400 text-yellow-900 rounded-lg">
                       中
                     </span>
                   } @else {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-500 text-white rounded">
+                    <span class="shrink-0 px-3 py-1 text-sm font-bold bg-green-500 text-white rounded-lg">
                       一般
                     </span>
                   }
                 </div>
-                <p class="text-stone-900 text-sm leading-relaxed whitespace-pre-wrap">
+                
+                <p class="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap mb-3">
                   {{ a.content }}
                 </p>
-                <div class="mt-3 text-xs text-stone-900 opacity-50">
+                
+                <div class="text-xs text-stone-400">
                   {{ formatDate(a.created_at) }}
                 </div>
               </div>
             }
           </div>
         }
-
       </div>
     </main>
   `,
@@ -110,51 +116,71 @@ interface Announcement {
     }
   `]
 })
-export class AnnouncementsComponent implements OnInit {
+export class AnnouncementsComponent implements OnInit, OnDestroy {
   announcements: Announcement[] = [];
   loading = true;
-  error = '';
+  showError = false;
+  errorMessage = '';
+  apiUrl = '';
+  private reloadSubscription?: Subscription;
 
   constructor(
-    private http: HttpClient,
-    private api: KmbApiService
-  ) {}
+    private http: HttpClient
+  ) {
+    this.apiUrl = 'https://kmb-backend-production.up.railway.app/api';
+  }
 
   ngOnInit(): void {
     this.loadAnnouncements();
   }
 
+  ngOnDestroy(): void {
+    this.reloadSubscription?.unsubscribe();
+  }
+
   loadAnnouncements(): void {
     this.loading = true;
-    this.error = '';
+    this.showError = false;
+    this.errorMessage = '';
 
-    const apiUrl = this.api.getBackendUrl();
-    console.log('Loading announcements from:', `${apiUrl}/announcements`);
-    
-    this.http.get<Announcement[]>(`${apiUrl}/announcements`).subscribe({
+    const url = `${this.apiUrl}/announcements`;
+    console.log('Fetching:', url);
+
+    this.http.get<Announcement[]>(url).subscribe({
       next: (data) => {
-        console.log('Announcements loaded:', data);
-        this.announcements = data;
+        console.log('Success, count:', data?.length || 0);
+        this.announcements = data || [];
         this.loading = false;
+        this.showError = false;
       },
-      error: (err) => {
-        console.error('Failed to load announcements:', err);
-        this.error = '無法載入公告，請稍後再試 (' + err.message + ')';
+      error: (err: HttpErrorResponse) => {
+        console.error('Error:', err);
         this.loading = false;
+        this.showError = true;
+        this.errorMessage = err.status === 0 
+          ? '網絡連線失敗' 
+          : err.status === 404 
+            ? 'API 找不到 (404)'
+            : `伺服器錯誤 (${err.status})`;
       }
     });
   }
 
   formatDate(dateStr: string): string {
-    // Backend stores Unix timestamp in seconds, convert to milliseconds
-    const timestamp = typeof dateStr === 'number' ? dateStr * 1000 : parseInt(dateStr) * 1000;
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('zh-HK', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateStr) return '';
+    try {
+      const timestamp = parseInt(dateStr) * 1000;
+      if (isNaN(timestamp)) return dateStr;
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('zh-HK', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
   }
 }
