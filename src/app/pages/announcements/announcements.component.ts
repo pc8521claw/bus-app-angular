@@ -33,6 +33,7 @@ interface Announcement {
           <div class="flex flex-col items-center justify-center py-12">
             <div class="w-8 h-8 border-3 border-stone-200 border-t-blue-600 rounded-full animate-spin"></div>
             <p class="mt-3 text-sm text-stone-600">載入中...</p>
+            <p class="mt-1 text-xs text-stone-400">API: {{ apiUrl }}/announcements</p>
           </div>
         }
 
