@@ -24,9 +24,6 @@ interface Announcement {
           <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             📢 公告
           </h1>
-          <p class="text-stone-900 text-base opacity-60">
-            最新消息及服務通知
-          </p>
         </div>
 
         <!-- Loading -->
@@ -64,16 +61,24 @@ interface Announcement {
             @for (a of announcements; track a.id) {
               <div 
                 class="bg-white rounded-2xl shadow-sm border border-stone-200 p-5 transition-all hover:shadow-md"
-                [class.border-l-4]="a.priority >= 5"
-                [class.border-l-amber-400]="a.priority >= 5"
+                [class.border-l-4]="a.priority === 10"
+                [class.border-l-red-500]="a.priority === 10"
               >
                 <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="font-bold text-stone-900 text-base leading-tight">
                     {{ a.title }}
                   </h3>
-                  @if (a.priority >= 5) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 rounded">
+                  @if (a.priority === 10) {
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
                       置頂
+                    </span>
+                  } @else if (a.priority === 5) {
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                      高
+                    </span>
+                  } @else if (a.priority === 1) {
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                      一般
                     </span>
                   }
                 </div>
