@@ -69,15 +69,15 @@ interface Announcement {
                     {{ a.title }}
                   </h3>
                   @if (a.priority === 10) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
-                      置頂
-                    </span>
-                  } @else if (a.priority === 5) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded">
                       高
                     </span>
-                  } @else if (a.priority === 1) {
-                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                  } @else if (a.priority === 5) {
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-amber-400 text-amber-900 rounded">
+                      中
+                    </span>
+                  } @else {
+                    <span class="shrink-0 px-2 py-0.5 text-xs font-medium bg-green-500 text-white rounded">
                       一般
                     </span>
                   }
@@ -128,14 +128,17 @@ export class AnnouncementsComponent implements OnInit {
     this.error = '';
 
     const apiUrl = this.api.getBackendUrl();
+    console.log('Loading announcements from:', `${apiUrl}/announcements`);
+    
     this.http.get<Announcement[]>(`${apiUrl}/announcements`).subscribe({
       next: (data) => {
+        console.log('Announcements loaded:', data);
         this.announcements = data;
         this.loading = false;
       },
       error: (err) => {
         console.error('Failed to load announcements:', err);
-        this.error = '無法載入公告，請稍後再試';
+        this.error = '無法載入公告，請稍後再試 (' + err.message + ')';
         this.loading = false;
       }
     });
