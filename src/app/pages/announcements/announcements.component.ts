@@ -21,10 +21,10 @@ interface Announcement {
       <div class="w-full max-w-md">
         <!-- Header -->
         <div class="text-center mb-6">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             📢 公告
           </h1>
-          <p class="text-stone-900 text-sm opacity-60">
+          <p class="text-stone-900 text-base opacity-60">
             最新消息及服務通知
           </p>
         </div>
@@ -90,7 +90,7 @@ interface Announcement {
 
         <!-- Footer -->
         <div class="mt-8 text-center text-xs text-stone-900 opacity-50">
-          <div>公告由 hk-bus-crawling 團隊更新</div>
+          <div>最後更新：{{ lastUpdated }}</div>
         </div>
       </div>
     </main>
@@ -112,6 +112,7 @@ export class AnnouncementsComponent implements OnInit {
   announcements: Announcement[] = [];
   loading = true;
   error = '';
+  lastUpdated = '';
 
   constructor(
     private http: HttpClient,
@@ -130,6 +131,7 @@ export class AnnouncementsComponent implements OnInit {
     this.http.get<Announcement[]>(`${apiUrl}/announcements`).subscribe({
       next: (data) => {
         this.announcements = data;
+        this.lastUpdated = new Date().toLocaleString('zh-HK');
         this.loading = false;
       },
       error: (err) => {

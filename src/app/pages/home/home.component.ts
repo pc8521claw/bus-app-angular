@@ -18,7 +18,7 @@ import { FavoriteItem, RecentSearch, RouteSearchResult, Direction } from '../../
           <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             巴士路線搜尋
           </h1>
-          <p class="text-stone-900 text-sm sm:text-base">
+          <p class="text-stone-900 text-base sm:text-lg">
             巴士路線、車站及到站時間
           </p>
         </div>
