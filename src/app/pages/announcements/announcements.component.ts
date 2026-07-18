@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 interface Announcement {
   id: number;
@@ -25,23 +27,21 @@ interface Announcement {
         </div>
 
         <!-- Loading -->
-        @if (loading && announcements.length === 0) {
+        @if (loading) {
           <div class="flex flex-col items-center justify-center py-12">
             <div class="w-8 h-8 border-3 border-stone-200 border-t-blue-600 rounded-full animate-spin"></div>
             <p class="mt-3 text-sm text-stone-600">載入中...</p>
-            <p class="mt-1 text-xs text-stone-400">API: {{ apiUrl }}/announcements</p>
           </div>
         }
 
         <!-- Error -->
-        @if (showError && !loading) {
+        @if (showError) {
           <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center">
             <div class="text-3xl mb-3">⚠️</div>
             <p class="text-red-700 font-medium">{{ errorMessage }}</p>
-            <p class="text-stone-600 text-xs mt-2 mb-4">API: {{ apiUrl }}/announcements</p>
             <button 
               (click)="loadAnnouncements()"
-              class="px-6 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors"
+              class="mt-4 px-6 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors"
             >
               重試
             </button>
@@ -57,7 +57,7 @@ interface Announcement {
         }
 
         <!-- Announcements List -->
-        @if (announcements.length > 0) {
+        @if (!loading && !showError && announcements.length > 0) {
           <div class="space-y-4">
             @for (a of announcements; track a.id) {
               <div 
@@ -118,38 +118,31 @@ export class AnnouncementsComponent implements OnInit {
   loading = true;
   showError = false;
   errorMessage = '';
-  apiUrl = 'https://kmb-backend-production.up.railway.app/api';
 
-  constructor() {}
+  private readonly API_URL = 'https://kmb-backend-production.up.railway.app/api';
 
-  ngOnInit(): void {
-    this.loadAnnouncements();
+  constructor(private http: HttpClient) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.loadAnnouncements();
   }
 
-  loadAnnouncements(): void {
+  async loadAnnouncements(): Promise<void> {
     this.loading = true;
     this.showError = false;
     this.errorMessage = '';
 
-    const url = `${this.apiUrl}/announcements`;
-    
-    // Use fetch API instead of HttpClient for reliability
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data: Announcement[]) => {
-        this.announcements = data || [];
-        this.loading = false;
-      })
-      .catch(err => {
-        this.loading = false;
-        this.showError = true;
-        this.errorMessage = '無法載入公告: ' + err.message;
-      });
+    try {
+      const data = await firstValueFrom(
+        this.http.get<Announcement[]>(`${this.API_URL}/announcements`)
+      );
+      this.announcements = data || [];
+    } catch (err: any) {
+      this.showError = true;
+      this.errorMessage = err?.message || '無法載入公告';
+    } finally {
+      this.loading = false;
+    }
   }
 
   formatDate(dateStr: string): string {
