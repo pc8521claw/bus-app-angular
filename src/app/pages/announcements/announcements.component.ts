@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -121,27 +121,40 @@ export class AnnouncementsComponent implements OnInit {
 
   private readonly API_URL = 'https://kmb-backend-production.up.railway.app/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.loadAnnouncements();
+  ngOnInit(): void {
+    this.zone.run(() => {
+      this.loadAnnouncements();
+    });
   }
 
   async loadAnnouncements(): Promise<void> {
     this.loading = true;
     this.showError = false;
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
     try {
       const data = await firstValueFrom(
         this.http.get<Announcement[]>(`${this.API_URL}/announcements`)
       );
-      this.announcements = data || [];
+      this.zone.run(() => {
+        this.announcements = data || [];
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
     } catch (err: any) {
-      this.showError = true;
-      this.errorMessage = err?.message || '無法載入公告';
-    } finally {
-      this.loading = false;
+      this.zone.run(() => {
+        this.showError = true;
+        this.errorMessage = err?.message || '無法載入公告';
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
     }
   }
 
