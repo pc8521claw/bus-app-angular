@@ -38,6 +38,7 @@
 | 路線搜尋 | KMB/CTB API → Railway Proxy → Angular |
 | 車費資料 | Railway Backend (SQLite) |
 | 服務時間 | Railway Backend (SQLite) |
+| 公告 | Railway Backend (`/api/announcements`) |
 
 ---
 
@@ -74,6 +75,12 @@
 - 顯示公司顏色標記（橙點 = KMB，藍點 = CTB）
 - 顯示行駛方向（出/入）
 
+### 公告
+- Header Tab 切換（搜尋 ↔ 公告）
+- 顯示 Railway Backend 公告 API 數據
+- 優先級標籤：高(10)=🔴紅 / 中(5)=🟡黃 / 一般(1)=🟢綠
+- 公告按 priority DESC, created_at DESC 排序
+
 ---
 
 ## API 數據來源
@@ -84,6 +91,7 @@
 | CTB 城巴 | `rt.data.gov.hk` | 路線、站點、ETA (經 Railway Proxy) |
 | 車費資料 | Railway Backend | SQLite Database |
 | 服務時間 | Railway Backend | SQLite Database |
+| 公告 | Railway Backend | `/api/announcements` |
 
 ---
 
@@ -99,7 +107,8 @@ bus-app-angular/
 │   │   │   └── types.ts                # TypeScript 介面定義
 │   │   ├── pages/
 │   │   │   ├── home/                   # 首頁：搜尋表單 + 結果 + 收藏 + 最近
-│   │   │   └── route/                  # 路線結果頁
+│   │   │   ├── route/                  # 路線結果頁
+│   │   │   └── announcements/          # 公告頁面
 │   │   ├── services/
 │   │   │   ├── kmb-api.service.ts      # KMB / CTB API 服務
 │   │   │   ├── fare-data.service.ts    # 車費數據服務
